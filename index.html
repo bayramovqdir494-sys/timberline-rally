@@ -56,7 +56,7 @@ button{font-family:var(--fb);cursor:pointer;border:0;color:inherit}
 @media (max-width:700px),(max-height:520px){#trList{grid-template-columns:1fr}}
 #minimap{position:absolute;right:16px;top:72px;width:170px;height:170px;border-radius:50%;overflow:hidden;opacity:.92}
 #pace{position:absolute;left:50%;top:116px;transform:translateX(-50%);display:flex;align-items:center;gap:10px;padding:8px 16px;opacity:0;transition:opacity .2s}
-#pace.on{opacity:1}
+#pace,#pace.on{display:none!important}
 #pace svg{width:44px;height:44px}
 #pace .sev{font-family:var(--fh);font-size:30px;min-width:22px;text-align:center}
 #pace .d{font-size:15px;color:var(--dim);font-weight:700;min-width:44px}
@@ -5747,8 +5747,8 @@ const Main = {
     window.__ready = true;
     if (window.__noAutoStart) return;
     Showroom.init();
-    if (Save.data.firstRun) await this.playCareer(STAGES[0]);
-    else { UI.showLoading(1, 'Ready'); CG.loadingStop(); G.toMenu(); setTimeout(() => UI.hideLoading(), 60); }
+    // v3: always open on the main menu (first run too)
+    { UI.showLoading(1, 'Ready'); CG.loadingStop(); G.toMenu(); setTimeout(() => UI.hideLoading(), 60); }
   },
   async playCareer(def) {
     if (!(G.stage && G.def === def && G.mode === 'career')) await G.loadStage(def, def.region, { mode: 'career' });
