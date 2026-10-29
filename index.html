@@ -325,6 +325,13 @@ body.touch #drift{top:30%}body.touch #drift .v{font-size:30px}
 @media (max-height:450px){.tb{transform:scale(.86)}#tL{left:14px;bottom:14px}#tR{left:110px;bottom:14px}#tGas{right:14px;bottom:14px}#tBrk{right:118px;bottom:10px}#tHand{right:124px;bottom:92px}#tNit{right:24px;bottom:122px}}
 .qreg button{position:relative}
 .newTag{position:absolute;top:4px;right:4px;font-style:normal;font-size:10px;font-weight:800;letter-spacing:.06em;background:#ff5a1f;color:#fff;padding:2px 6px;border-radius:6px;box-shadow:0 2px 6px rgba(0,0,0,.4);z-index:2}
+#rotLock{position:fixed;inset:0;z-index:99999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:22px;background:radial-gradient(ellipse at center,#1b2a30 0%,#0b0f12 75%);color:var(--txt);text-align:center;touch-action:none}
+body.rotlock #rotLock{display:flex}
+#rotLock .ph{width:64px;height:110px;border:5px solid var(--acc);border-radius:14px;position:relative;animation:rotPh 2.2s ease-in-out infinite;box-shadow:0 0 24px rgba(255,178,30,.35)}
+#rotLock .ph:after{content:"";position:absolute;left:50%;bottom:7px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:var(--acc)}
+#rotLock h2{margin:0;font-family:var(--fh);font-size:30px;letter-spacing:1.5px;color:var(--acc);text-shadow:0 3px 0 rgba(0,0,0,.4)}
+#rotLock p{margin:0;color:var(--dim);font-size:15px;max-width:80vw}
+@keyframes rotPh{0%,20%{transform:rotate(0)}50%,80%{transform:rotate(-90deg)}100%{transform:rotate(0)}}
 </style>
 <script type="importmap">{"imports":{"three":"./lib/three.module.min.js","three/addons/":"./lib/addons/"}}</script>
 <script src="https://sdk.crazygames.com/crazygames-sdk-v3.js"></script>
@@ -417,6 +424,7 @@ body.touch #drift{top:30%}body.touch #drift .v{font-size:30px}
 <div id="trophies" class="overlay hidden"><div class="card" style="width:min(680px,94vw)"><button class="x" data-close>✕</button><h2>Trophies</h2><p class="lead" id="trLead"></p><div id="trList"></div></div></div>
 <div id="toasts"></div>
 
+<div id="rotLock" aria-live="polite"><div class="ph"></div><h2>Rotate your device</h2><p>Timberline Rally is played in landscape — hold your phone with both hands.</p></div>
 <script type="module">
 import * as THREE from 'three';
 import { Sky } from 'three/addons/objects/Sky.js';
@@ -6095,6 +6103,29 @@ const Showroom = {
   },
 };
 
+
+</script>
+<script>
+// --- Landscape-only lock for touch devices (desktop unaffected) ---
+(() => {
+  const isTouchDev = () => (matchMedia('(pointer:coarse)').matches || navigator.maxTouchPoints > 0) && !matchMedia('(pointer:fine)').matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  const isPortrait = () => innerHeight > innerWidth;
+  let locked = false;
+  const check = () => {
+    const want = isTouchDev() && isPortrait();
+    if (want !== locked) { locked = want; document.body.classList.toggle('rotlock', want); }
+    if (locked) {
+      const G = window.__game && window.__game.G; if (G && G.state === 'race') G.pause(true); // existing pause: gameplayStop + pause menu
+    }
+  };
+  addEventListener('resize', check); addEventListener('orientationchange', () => setTimeout(check, 120));
+  try { screen.orientation && screen.orientation.addEventListener('change', check); } catch (e) {}
+  setInterval(check, 300); // catches countdown->race while rotated
+  const tryLock = () => { if (!isTouchDev()) return; try { const p = screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape'); p && p.catch && p.catch(() => {}); } catch (e) {} };
+  addEventListener('pointerup', tryLock, { passive: true }); document.addEventListener('fullscreenchange', tryLock);
+  window.__rotLock = { check, get locked() { return locked; } };
+  check();
+})();
 </script>
 </body>
 </html>
